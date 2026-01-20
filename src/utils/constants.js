@@ -6,7 +6,7 @@
 export const APP_NAME = import.meta.env.VITE_APP_NAME || 'RAG Lite';
 
 // API 基础地址
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
 
 // 分页默认配置
 export const DEFAULT_PAGE_SIZE = 10;

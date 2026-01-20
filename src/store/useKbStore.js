@@ -18,6 +18,12 @@ const useKbStore = create((set, get) => ({
     pageSize: DEFAULT_PAGE_SIZE,
     total: 0,
   },
+  // 文档分页状态
+  docPagination: {
+    page: 1,
+    pageSize: DEFAULT_PAGE_SIZE,
+    total: 0,
+  },
 
   // 获取知识库列表
   fetchKnowledgebases: async (page = 1, pageSize = DEFAULT_PAGE_SIZE) => {
@@ -116,6 +122,11 @@ const useKbStore = create((set, get) => ({
       const data = response.data || response;
       set({
         documents: data.items || [],
+        docPagination: {
+          page: data.page || page,
+          pageSize: data.page_size || pageSize,
+          total: data.total || 0,
+        },
         loading: false,
       });
       return data;
@@ -147,6 +158,10 @@ const useKbStore = create((set, get) => ({
       await kbApi.deleteDocument(kbId, docId);
       set((state) => ({
         documents: state.documents.filter((doc) => doc.id !== docId),
+        docPagination: {
+          ...state.docPagination,
+          total: Math.max(0, state.docPagination.total - 1),
+        },
         loading: false,
       }));
       return { success: true };
@@ -154,6 +169,20 @@ const useKbStore = create((set, get) => ({
       set({ loading: false, error: error.message });
       return { success: false, error: error.message };
     }
+  },
+
+  // 处理文档（预留，仅提示）
+  // eslint-disable-next-line no-unused-vars
+  processDocument: async (kbId, docId) => {
+    // 预留功能，待后续实现
+    return { success: false, message: '处理功能即将上线，敬请期待' };
+  },
+
+  // 重新处理文档（预留，仅提示）
+  // eslint-disable-next-line no-unused-vars
+  reprocessDocument: async (kbId, docId) => {
+    // 预留功能，待后续实现
+    return { success: false, message: '重新处理功能即将上线，敬请期待' };
   },
 
   // 设置当前知识库

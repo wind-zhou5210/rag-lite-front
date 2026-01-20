@@ -75,3 +75,53 @@ export const getDocuments = (kbId, params = {}) => {
 export const deleteDocument = (kbId, docId) => {
   return api.delete(`/kb/${kbId}/documents/${docId}`);
 };
+
+/**
+ * 获取文档详情
+ * @param {string} kbId - 知识库 ID
+ * @param {string} docId - 文档 ID
+ */
+export const getDocument = (kbId, docId) => {
+  return api.get(`/kb/${kbId}/documents/${docId}`);
+};
+
+/**
+ * 处理文档（预留接口）
+ * @param {string} kbId - 知识库 ID
+ * @param {string} docId - 文档 ID
+ */
+// eslint-disable-next-line no-unused-vars
+export const processDocument = (kbId, docId) => {
+  // 预留接口，后续实现具体处理逻辑
+  return Promise.resolve({ success: true, message: '处理功能暂未实现' });
+};
+
+/**
+ * 重新处理文档（预留接口）
+ * @param {string} kbId - 知识库 ID
+ * @param {string} docId - 文档 ID
+ */
+// eslint-disable-next-line no-unused-vars
+export const reprocessDocument = (kbId, docId) => {
+  // 预留接口，后续实现具体处理逻辑
+  return Promise.resolve({ success: true, message: '重新处理功能暂未实现' });
+};
+
+/**
+ * 获取文档分块列表（预留接口）
+ * @param {string} kbId - 知识库 ID
+ * @param {string} docId - 文档 ID
+ * @param {Object} params - 分页参数
+ */
+// eslint-disable-next-line no-unused-vars
+export const getDocumentChunks = (kbId, docId, params = {}) => {
+  // 预留接口，后续实现分块查询功能
+  return Promise.resolve({ 
+    data: { 
+      items: [], 
+      page: 1, 
+      page_size: 10, 
+      total: 0 
+    } 
+  });
+};
