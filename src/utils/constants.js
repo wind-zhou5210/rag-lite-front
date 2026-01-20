@@ -15,6 +15,16 @@ export const DEFAULT_PAGE_SIZE = 10;
 export const DEFAULT_CHUNK_SIZE = 512;
 export const DEFAULT_CHUNK_OVERLAP = 50;
 
+// 图片上传配置
+export const IMAGE_UPLOAD_CONFIG = {
+  maxSize: 5 * 1024 * 1024,  // 5MB
+  allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+  allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
+  // 提示文本
+  acceptText: 'JPG, PNG, GIF, WebP',
+  maxSizeText: '5MB',
+};
+
 // 路由路径
 export const ROUTES = {
   HOME: '/',

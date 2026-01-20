@@ -17,12 +17,6 @@ import {
   Space,
   Empty,
   Spin,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Row,
-  Col,
 } from 'antd';
 import {
   UploadOutlined,
@@ -34,7 +28,8 @@ import {
   EditOutlined,
 } from '@ant-design/icons';
 import useKbStore from '../../store/useKbStore';
-import { API_BASE_URL, DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP } from '../../utils/constants';
+import KnowledgebaseFormModal from '../../components/KnowledgebaseFormModal';
+import { API_BASE_URL } from '../../utils/constants';
 import { getToken } from '../../utils/token';
 
 const { Title, Text } = Typography;
@@ -42,9 +37,9 @@ const { Title, Text } = Typography;
 const KbDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
   const [uploading, setUploading] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
+  // 编辑模态框状态
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
   
   const {
@@ -102,27 +97,18 @@ const KbDetail = () => {
 
   // 打开编辑模态框
   const handleOpenEditModal = () => {
-    if (currentKb) {
-      form.setFieldsValue({
-        name: currentKb.name,
-        description: currentKb.description || '',
-        chunk_size: currentKb.chunk_size,
-        chunk_overlap: currentKb.chunk_overlap,
-      });
-      setEditModalVisible(true);
-    }
+    setEditModalOpen(true);
   };
 
   // 关闭编辑模态框
   const handleCloseEditModal = () => {
-    setEditModalVisible(false);
-    form.resetFields();
+    setEditModalOpen(false);
   };
 
   // 更新知识库
-  const handleUpdate = async (values) => {
+  const handleUpdate = async (formData) => {
     setUpdating(true);
-    const result = await updateKnowledgebase(id, values);
+    const result = await updateKnowledgebase(id, formData);
     setUpdating(false);
     
     if (result.success) {
@@ -243,6 +229,21 @@ const KbDetail = () => {
           </Button>
         }
       >
+        {/* 封面图片显示 */}
+        {currentKb.cover_image_url && (
+          <div style={{ marginBottom: 16, textAlign: 'center' }}>
+            <img
+              src={currentKb.cover_image_url}
+              alt="知识库封面"
+              style={{
+                maxWidth: '100%',
+                maxHeight: 200,
+                objectFit: 'cover',
+                borderRadius: 8,
+              }}
+            />
+          </div>
+        )}
         <Descriptions title="知识库信息" column={{ xs: 1, sm: 2, md: 3 }}>
           <Descriptions.Item label="名称">{currentKb.name}</Descriptions.Item>
           <Descriptions.Item label="分块大小">{currentKb.chunk_size}</Descriptions.Item>
@@ -290,63 +291,14 @@ const KbDetail = () => {
       </Card>
 
       {/* 编辑知识库模态框 */}
-      <Modal
-        title="编辑知识库"
-        open={editModalVisible}
+      <KnowledgebaseFormModal
+        open={editModalOpen}
+        mode="edit"
+        initialData={currentKb}
+        loading={updating}
         onCancel={handleCloseEditModal}
-        footer={null}
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdate}
-        >
-          <Form.Item
-            name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入知识库名称' }]}
-          >
-            <Input placeholder="请输入知识库名称" />
-          </Form.Item>
-
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="请输入知识库描述（可选）" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="chunk_size"
-                label="分块大小"
-                rules={[{ required: true, message: '请输入分块大小' }]}
-                extra="每个文本块的最大字符数，建议 512-1024"
-              >
-                <InputNumber min={100} max={2000} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="chunk_overlap"
-                label="分块重叠"
-                rules={[{ required: true, message: '请输入分块重叠大小' }]}
-                extra="相邻块之间的重叠字符数，建议 50-100"
-              >
-                <InputNumber min={0} max={200} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-            <Button onClick={handleCloseEditModal} style={{ marginRight: 8 }}>
-              取消
-            </Button>
-            <Button type="primary" htmlType="submit" loading={updating}>
-              保存
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+        onSubmit={handleUpdate}
+      />
     </div>
   );
 };

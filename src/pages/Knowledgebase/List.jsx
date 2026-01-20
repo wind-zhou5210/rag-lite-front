@@ -9,10 +9,6 @@ import {
   Row,
   Col,
   Button,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
   Pagination,
   Empty,
   message,
@@ -28,20 +24,22 @@ import {
   EditOutlined,
   HomeOutlined,
   DatabaseOutlined,
+  PictureOutlined,
 } from '@ant-design/icons';
 import useKbStore from '../../store/useKbStore';
-import { DEFAULT_CHUNK_SIZE, DEFAULT_CHUNK_OVERLAP, DEFAULT_PAGE_SIZE } from '../../utils/constants';
+import KnowledgebaseFormModal from '../../components/KnowledgebaseFormModal';
+import { DEFAULT_PAGE_SIZE } from '../../utils/constants';
 
 const { Title, Text, Paragraph } = Typography;
 
 const KbList = () => {
-  const [createForm] = Form.useForm();
-  const [editForm] = Form.useForm();
-  const [createModalVisible, setCreateModalVisible] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingKb, setEditingKb] = useState(null);
-  const [updating, setUpdating] = useState(false);
+  // 统一的模态框状态
+  const [modalState, setModalState] = useState({
+    open: false,
+    mode: 'create', // 'create' | 'edit'
+    data: null,     // 编辑时的初始数据
+  });
+  const [submitting, setSubmitting] = useState(false);
   
   const {
     knowledgebases,
@@ -60,28 +58,46 @@ const KbList = () => {
 
   // 打开创建模态框
   const handleOpenCreateModal = () => {
-    createForm.resetFields();
-    setCreateModalVisible(true);
+    setModalState({ open: true, mode: 'create', data: null });
   };
 
-  // 关闭创建模态框
-  const handleCloseCreateModal = () => {
-    setCreateModalVisible(false);
-    createForm.resetFields();
+  // 打开编辑模态框
+  const handleOpenEditModal = (kb) => {
+    setModalState({ open: true, mode: 'edit', data: kb });
   };
 
-  // 创建知识库
-  const handleCreate = async (values) => {
-    setCreating(true);
-    const result = await createKnowledgebase(values);
-    setCreating(false);
+  // 关闭模态框
+  const handleCloseModal = () => {
+    setModalState({ open: false, mode: 'create', data: null });
+  };
+
+  // 统一的表单提交处理
+  const handleFormSubmit = async (formData) => {
+    setSubmitting(true);
     
-    if (result.success) {
-      message.success('知识库创建成功');
-      handleCloseCreateModal();
-      fetchKnowledgebases(1, DEFAULT_PAGE_SIZE);
-    } else {
-      message.error(result.error || '创建失败，请稍后重试');
+    try {
+      if (modalState.mode === 'create') {
+        // 创建知识库
+        const result = await createKnowledgebase(formData);
+        if (result.success) {
+          message.success('知识库创建成功');
+          handleCloseModal();
+          fetchKnowledgebases(1, DEFAULT_PAGE_SIZE);
+        } else {
+          message.error(result.error || '创建失败，请稍后重试');
+        }
+      } else {
+        // 更新知识库
+        const result = await updateKnowledgebase(modalState.data.id, formData);
+        if (result.success) {
+          message.success('知识库更新成功');
+          handleCloseModal();
+        } else {
+          message.error(result.error || '更新失败，请稍后重试');
+        }
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -92,40 +108,6 @@ const KbList = () => {
       message.success(`知识库 "${name}" 已删除`);
     } else {
       message.error(result.error || '删除失败，请稍后重试');
-    }
-  };
-
-  // 打开编辑模态框
-  const handleOpenEditModal = (kb) => {
-    setEditingKb(kb);
-    editForm.setFieldsValue({
-      name: kb.name,
-      description: kb.description || '',
-      chunk_size: kb.chunk_size,
-      chunk_overlap: kb.chunk_overlap,
-    });
-    setEditModalVisible(true);
-  };
-
-  // 关闭编辑模态框
-  const handleCloseEditModal = () => {
-    setEditModalVisible(false);
-    setEditingKb(null);
-    editForm.resetFields();
-  };
-
-  // 更新知识库
-  const handleUpdate = async (values) => {
-    if (!editingKb) return;
-    setUpdating(true);
-    const result = await updateKnowledgebase(editingKb.id, values);
-    setUpdating(false);
-    
-    if (result.success) {
-      message.success('知识库更新成功');
-      handleCloseEditModal();
-    } else {
-      message.error(result.error || '更新失败，请稍后重试');
     }
   };
 
@@ -165,17 +147,36 @@ const KbList = () => {
                   <Card
                     hoverable
                     cover={
-                      <div
-                        style={{
-                          height: 120,
-                          background: '#f5f5f5',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <FolderOutlined style={{ fontSize: 48, color: '#999' }} />
-                      </div>
+                      kb.cover_image_url ? (
+                        <div
+                          style={{
+                            height: 120,
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <img
+                            src={kb.cover_image_url}
+                            alt={kb.name}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          style={{
+                            height: 120,
+                            background: '#f5f5f5',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <PictureOutlined style={{ fontSize: 48, color: '#999' }} />
+                        </div>
+                      )
                     }
                     actions={[
                       <Button
@@ -247,127 +248,15 @@ const KbList = () => {
         )}
       </Spin>
 
-      {/* 创建知识库模态框 */}
-      <Modal
-        title="创建知识库"
-        open={createModalVisible}
-        onCancel={handleCloseCreateModal}
-        footer={null}
-        destroyOnClose
-      >
-        <Form
-          form={createForm}
-          layout="vertical"
-          onFinish={handleCreate}
-          initialValues={{
-            chunk_size: DEFAULT_CHUNK_SIZE,
-            chunk_overlap: DEFAULT_CHUNK_OVERLAP,
-          }}
-        >
-          <Form.Item
-            name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入知识库名称' }]}
-          >
-            <Input placeholder="请输入知识库名称" />
-          </Form.Item>
-
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="请输入知识库描述（可选）" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="chunk_size"
-                label="分块大小"
-                rules={[{ required: true, message: '请输入分块大小' }]}
-                extra="每个文本块的最大字符数，建议 512-1024"
-              >
-                <InputNumber min={100} max={2000} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="chunk_overlap"
-                label="分块重叠"
-                rules={[{ required: true, message: '请输入分块重叠大小' }]}
-                extra="相邻块之间的重叠字符数，建议 50-100"
-              >
-                <InputNumber min={0} max={200} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-            <Button onClick={handleCloseCreateModal} style={{ marginRight: 8 }}>
-              取消
-            </Button>
-            <Button type="primary" htmlType="submit" loading={creating}>
-              创建
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* 编辑知识库模态框 */}
-      <Modal
-        title="编辑知识库"
-        open={editModalVisible}
-        onCancel={handleCloseEditModal}
-        footer={null}
-        destroyOnClose
-      >
-        <Form
-          form={editForm}
-          layout="vertical"
-          onFinish={handleUpdate}
-        >
-          <Form.Item
-            name="name"
-            label="名称"
-            rules={[{ required: true, message: '请输入知识库名称' }]}
-          >
-            <Input placeholder="请输入知识库名称" />
-          </Form.Item>
-
-          <Form.Item name="description" label="描述">
-            <Input.TextArea rows={3} placeholder="请输入知识库描述（可选）" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="chunk_size"
-                label="分块大小"
-                rules={[{ required: true, message: '请输入分块大小' }]}
-                extra="每个文本块的最大字符数，建议 512-1024"
-              >
-                <InputNumber min={100} max={2000} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="chunk_overlap"
-                label="分块重叠"
-                rules={[{ required: true, message: '请输入分块重叠大小' }]}
-                extra="相邻块之间的重叠字符数，建议 50-100"
-              >
-                <InputNumber min={0} max={200} style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-            <Button onClick={handleCloseEditModal} style={{ marginRight: 8 }}>
-              取消
-            </Button>
-            <Button type="primary" htmlType="submit" loading={updating}>
-              保存
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* 知识库表单模态框（创建/编辑共用） */}
+      <KnowledgebaseFormModal
+        open={modalState.open}
+        mode={modalState.mode}
+        initialData={modalState.data}
+        loading={submitting}
+        onCancel={handleCloseModal}
+        onSubmit={handleFormSubmit}
+      />
     </div>
   );
 };
