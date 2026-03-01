@@ -191,6 +191,68 @@ const useKbStore = create((set, get) => ({
     }
   },
 
+  // ========== 分块相关状态和方法 ==========
+  chunks: [],
+  chunkPagination: {
+    page: 1,
+    pageSize: 15,
+    total: 0,
+  },
+  chunkLoading: false,
+  currentChunkDoc: null,
+  isSearchMode: false,
+
+  // 获取文档分块
+  fetchChunks: async (kbId, docId, page = 1, pageSize = 15, query = '') => {
+    set({ chunkLoading: true });
+    try {
+      const params = { page, page_size: pageSize };
+      if (query) {
+        params.query = query;
+      }
+
+      const response = await kbApi.getDocumentChunks(kbId, docId, params);
+      const data = response.data || response;
+
+      if (!data || !data.items) {
+        set({
+          chunks: [],
+          chunkPagination: { page: 1, pageSize: 15, total: 0 },
+          isSearchMode: false,
+          chunkLoading: false,
+        });
+        return null;
+      }
+
+      set({
+        chunks: data.items || [],
+        chunkPagination: {
+          page: data.page || page,
+          pageSize: data.page_size || pageSize,
+          total: data.total || 0,
+        },
+        isSearchMode: data.is_search || false,
+        chunkLoading: false,
+      });
+
+      return data;
+    } catch (error) {
+      set({ chunkLoading: false, chunks: [] });
+      return null;
+    }
+  },
+
+  // 设置当前查看的文档
+  setCurrentChunkDoc: (doc) => set({ currentChunkDoc: doc }),
+
+  // 清空分块数据
+  clearChunks: () => set({
+    chunks: [],
+    chunkPagination: { page: 1, pageSize: 15, total: 0 },
+    currentChunkDoc: null,
+    isSearchMode: false,
+  }),
+
   // 设置当前知识库
   setCurrentKb: (kb) => set({ currentKb: kb }),
 

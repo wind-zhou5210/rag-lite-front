@@ -104,20 +104,11 @@ export const reprocessDocument = (kbId, docId) => {
 };
 
 /**
- * 获取文档分块列表（预留接口）
+ * 获取文档分块列表
  * @param {string} kbId - 知识库 ID
  * @param {string} docId - 文档 ID
- * @param {Object} params - 分页参数
+ * @param {Object} params - { page, page_size, query }
  */
-// eslint-disable-next-line no-unused-vars
 export const getDocumentChunks = (kbId, docId, params = {}) => {
-  // 预留接口，后续实现分块查询功能
-  return Promise.resolve({ 
-    data: { 
-      items: [], 
-      page: 1, 
-      page_size: 10, 
-      total: 0 
-    } 
-  });
+  return api.get(`/kb/${kbId}/documents/${docId}/chunks`, { params });
 };

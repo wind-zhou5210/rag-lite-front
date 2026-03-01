@@ -38,6 +38,7 @@ import {
 import useKbStore from '../../store/useKbStore';
 import KnowledgebaseFormModal from '../../components/KnowledgebaseFormModal';
 import DocumentUploadModal from '../../components/DocumentUploadModal';
+import ChunkDrawer from '../../components/ChunkDrawer';
 
 const { Title, Text } = Typography;
 
@@ -67,6 +68,10 @@ const KbDetail = () => {
   
   // 上传模态框状态
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
+
+  // 分块抽屉状态
+  const [chunkDrawerOpen, setChunkDrawerOpen] = useState(false);
+  const [currentDoc, setCurrentDoc] = useState(null);
   
   const {
     currentKb,
@@ -121,12 +126,10 @@ const KbDetail = () => {
     }
   };
 
-  // 查看分块（预留功能）
-  // eslint-disable-next-line no-unused-vars
-  const handleViewChunks = (docId, docName) => {
-    message.info(`分块查看功能即将上线，敬请期待`);
-    // TODO: 后续实现跳转到分块详情页
-    // navigate(`/kb/${id}/documents/${docId}/chunks`);
+  // 查看分块
+  const handleViewChunks = (doc) => {
+    setCurrentDoc(doc);
+    setChunkDrawerOpen(true);
   };
 
   // 打开编辑模态框
@@ -210,7 +213,7 @@ const KbDetail = () => {
             type="link"
             size="small"
             icon={<UnorderedListOutlined />}
-            onClick={() => handleViewChunks(docId, docName)}
+            onClick={() => handleViewChunks(record)}
           >
             分块
           </Button>
@@ -473,6 +476,15 @@ const KbDetail = () => {
         kbId={id}
         onCancel={() => setUploadModalOpen(false)}
         onSuccess={handleUploadSuccess}
+      />
+
+      {/* 分块抽屉 */}
+      <ChunkDrawer
+        open={chunkDrawerOpen}
+        kbId={id}
+        docId={currentDoc?.id}
+        docName={currentDoc?.name}
+        onClose={() => setChunkDrawerOpen(false)}
       />
     </div>
   );
