@@ -86,25 +86,21 @@ export const getDocument = (kbId, docId) => {
 };
 
 /**
- * 处理文档（预留接口）
+ * 处理文档
  * @param {string} kbId - 知识库 ID
  * @param {string} docId - 文档 ID
  */
-// eslint-disable-next-line no-unused-vars
 export const processDocument = (kbId, docId) => {
-  // 预留接口，后续实现具体处理逻辑
-  return Promise.resolve({ success: true, message: '处理功能暂未实现' });
+  return api.post(`/kb/${kbId}/documents/${docId}/process`);
 };
 
 /**
- * 重新处理文档（预留接口）
+ * 重新处理文档
  * @param {string} kbId - 知识库 ID
  * @param {string} docId - 文档 ID
  */
-// eslint-disable-next-line no-unused-vars
 export const reprocessDocument = (kbId, docId) => {
-  // 预留接口，后续实现具体处理逻辑
-  return Promise.resolve({ success: true, message: '重新处理功能暂未实现' });
+  return api.post(`/kb/${kbId}/documents/${docId}/reprocess`);
 };
 
 /**

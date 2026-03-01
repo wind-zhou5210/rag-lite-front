@@ -171,18 +171,24 @@ const useKbStore = create((set, get) => ({
     }
   },
 
-  // 处理文档（预留，仅提示）
-  // eslint-disable-next-line no-unused-vars
+  // 处理文档
   processDocument: async (kbId, docId) => {
-    // 预留功能，待后续实现
-    return { success: false, message: '处理功能即将上线，敬请期待' };
+    try {
+      const response = await kbApi.processDocument(kbId, docId);
+      return { success: true, data: response.data || response };
+    } catch (error) {
+      return { success: false, error: error.message || '处理失败' };
+    }
   },
 
-  // 重新处理文档（预留，仅提示）
-  // eslint-disable-next-line no-unused-vars
+  // 重新处理文档
   reprocessDocument: async (kbId, docId) => {
-    // 预留功能，待后续实现
-    return { success: false, message: '重新处理功能即将上线，敬请期待' };
+    try {
+      const response = await kbApi.reprocessDocument(kbId, docId);
+      return { success: true, data: response.data || response };
+    } catch (error) {
+      return { success: false, error: error.message || '重新处理失败' };
+    }
   },
 
   // 设置当前知识库
